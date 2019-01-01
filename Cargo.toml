@@ -1,0 +1,6 @@
+[package]
+name = "rubit"
+version = "0.1.0"
+authors = ["Nikita <Nikita_Puzankov@epam.com>"]
+
+[dependencies]
