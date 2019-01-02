@@ -2,11 +2,13 @@ fn main() {
     println!("Hello, quantum world!");
 }
 
+#[derive(Copy, Clone)]
 enum StandardBasisVector {
     Ground,
     Exited,
 }
 
+#[derive(Copy, Clone)]
 struct Qubit {
     state: StandardBasisVector,
     /// Energy relaxation time when qubits loss his excited state and decays towards ground state.
@@ -33,7 +35,7 @@ impl Qubit {
 }
 
 trait Gate {
-    fn apply(&mut self);
+    fn apply(&mut self) -> Qubit;
 }
 
 struct CNOT {
@@ -42,10 +44,11 @@ struct CNOT {
 }
 
 impl Gate for CNOT {
-    fn apply(&mut self) {
+    fn apply(&mut self) -> Qubit {
         if self.control.is_active() {
             self.target.activate()
         }
+        self.target
     }
 }
 
@@ -57,12 +60,13 @@ struct X {
 }
 
 impl Gate for X {
-    fn apply(&mut self) {
+    fn apply(&mut self) -> Qubit {
         if self.qubit.is_active() {
             self.qubit.deactivate()
         } else {
             self.qubit.activate()
         }
+        self.qubit
     }
 }
 
@@ -77,8 +81,20 @@ mod tests {
                 state: StandardBasisVector::Ground,
                 t1: 0,
                 t2: 0,
-            }
+            },
         };
-        x.apply()
+        assert!(x.apply().is_active())
+    }
+
+    #[test]
+    fn x_gate_should_deactivate_qubit_in_exited_state() {
+        let mut x = X {
+            qubit: Qubit {
+                state: StandardBasisVector::Exited,
+                t1: 0,
+                t2: 0,
+            },
+        };
+        assert!(!x.apply().is_active())
     }
 }
