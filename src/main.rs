@@ -149,6 +149,10 @@ impl SuperpositionedQubit {
         }
             return StandardBasisVector::Ground;
     }
+
+    fn is_in_superposition(&self) -> bool {
+        true
+    }
 }
 
 trait Gate {
@@ -209,20 +213,41 @@ impl Gate for X {
 ///    1 ( 1 1  )
 ///H = _ (      )
 ///   √2 ( 1 -1 )
-struct H;
+struct H{
+    row_1: [i32, 2],
+    row_2: [i32, 2],
+}
 
 //TODO: impl Gate with Generic Qubit Type as return type if any
 impl H {
-    fn apply(&mut self) -> SuperpositionedQubit {
+    fn new() -> H {
+        H {
+            row_1: [1,1],
+            row_2: [1, -1]
+        }
+    }
+
+    fn apply(qubit: Qubit) -> SuperpositionedQubit {
         SuperpositionedQubit
     }
+}
+
+fn h() {
+    let ket_1 = [1,0];
+    let ket_0 = [0,1];
+    let hadamard_matrix = H::new();
 }
 
 ///The T gate applies a phase of π/4, and has a matrix representation of
 ///( 1 0        )
 ///( 0 e^(iπ/4) )
 struct T {
-    qubit: Qubit,
+    qubit: QuantumPureState,
+}
+
+impl T {
+    fn apply(&mut self) {
+    }
 }
 
 
@@ -276,8 +301,14 @@ mod tests {
 
     #[test]
     fn h_gate_should_turn_qubit_state_to_superposition() {
-        let mut h = H; 
-        //assert!(h.apply().is_in_superposition())
+        assert!(
+            H::apply(
+                Qubit {
+                 state: StandardBasisVector::Exited,
+                 t1: 0,
+                 t2: 0,
+                }
+            ).is_in_superposition())
     }
 
     #[test]
