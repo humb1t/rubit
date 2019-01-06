@@ -17,6 +17,17 @@ struct QuantumPureState {
     phase: usize,
 }
 
+enum Basis {
+    Standard {
+        top: usize,
+        bottom: usize,
+    },
+    Superposition {
+        probability: usize,
+        phase: usize,
+    }
+}
+
 ///A pure state is one fully specified by a single ket
 ///a coherent superposition as described above.
 ///Coherence is essential for a qubit to be in a superposition state.
@@ -214,8 +225,8 @@ impl Gate for X {
 ///H = _ (      )
 ///   √2 ( 1 -1 )
 struct H{
-    row_1: [i32, 2],
-    row_2: [i32, 2],
+    row_1: [i32; 2],
+    row_2: [i32; 2],
 }
 
 //TODO: impl Gate with Generic Qubit Type as return type if any
@@ -242,7 +253,7 @@ fn h() {
 ///( 1 0        )
 ///( 0 e^(iπ/4) )
 struct T {
-    qubit: QuantumPureState,
+    qubit: Qubit,
 }
 
 impl T {
