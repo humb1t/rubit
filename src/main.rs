@@ -85,12 +85,20 @@ struct X {
 
 impl X {
     fn apply(&mut self) -> Qubit {
-        if self.qubit.is_active() {
-            self.qubit.deactivate()
-        } else {
-            self.qubit.activate()
+        let a11 = 0 as u8;
+        let a12 = 1 as u8;
+        let a21 = 1 as u8;
+        let a22 = 0 as u8;
+        match self.qubit.state {
+            Basis::Standard {top, bottom}=>{
+                let new_top = a11 * top + a12 * bottom;
+                let new_bottom = a21 * top + a22 * bottom;
+                Qubit {
+                    state: Basis::Standard {top: new_top, bottom: new_bottom}
+                }
+            },
+            _ => self.qubit
         }
-        self.qubit
     }
 }
 
@@ -146,7 +154,7 @@ mod tests {
             match q.measure() {
                 Basis::Standard { top, bottom } => {
                     println!("Standard {},{}", top, bottom);
-                    if top == 1 {
+                    if bottom == 1 {
                         active_state_detected = true
                     } else {
                         ground_state_detected = true
