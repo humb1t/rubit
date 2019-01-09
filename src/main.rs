@@ -8,8 +8,8 @@ fn main() {
 
 #[derive(Copy, Clone)]
 enum Basis {
-    Standard { top: u8, bottom: u8 },
-    Superposition { probability: usize, phase: usize },
+    Standard { top: i8, bottom: i8 },
+    Superposition { top: i8, bottom: i8 },
     Circular {},
 }
 
@@ -30,12 +30,37 @@ impl Qubit {
     fn is_active(&self) -> bool {
         match &self.state {
             Basis::Standard { top, bottom } => {
-                if *top == 0 as u8 {
+                if *top == 0 as i8 {
                     true
                 } else {
                     false
                 }
             }
+            Basis::Superposition { top, bottom } => {
+                let return_active: bool = random();
+                return_active
+            }
+            _ => false,
+        }
+    }
+
+    fn measure(&self) -> Basis {
+        match &self.state {
+            Basis::Superposition { top, bottom } => {
+                let return_active: bool = random();
+                if return_active {
+                    ket1()
+                } else {
+                    ket0()
+                }
+            }
+            _ => *&self.state,
+        }
+    }
+
+    fn is_in_superposition(&self) -> bool {
+        match &self.state {
+            Basis::Superposition { top, bottom } => true,
             _ => false,
         }
     }
@@ -46,22 +71,6 @@ impl Qubit {
 
     fn deactivate(&mut self) {
         self.state = ket0()
-    }
-}
-
-struct SuperpositionedQubit;
-
-impl SuperpositionedQubit {
-    fn measure(&self) -> Basis {
-        let return_active: bool = random();
-        if return_active {
-            return ket1();
-        }
-        return ket0();
-    }
-
-    fn is_in_superposition(&self) -> bool {
-        true
     }
 }
 
@@ -85,26 +94,29 @@ struct X {
 
 impl X {
     fn apply(&mut self) -> Qubit {
-        let a11 = 0 as u8;
-        let a12 = 1 as u8;
-        let a21 = 1 as u8;
-        let a22 = 0 as u8;
+        let a11 = 0 as i8;
+        let a12 = 1 as i8;
+        let a21 = 1 as i8;
+        let a22 = 0 as i8;
         match self.qubit.state {
-            Basis::Standard {top, bottom}=>{
+            Basis::Standard { top, bottom } => {
                 let new_top = a11 * top + a12 * bottom;
                 let new_bottom = a21 * top + a22 * bottom;
                 Qubit {
-                    state: Basis::Standard {top: new_top, bottom: new_bottom}
+                    state: Basis::Standard {
+                        top: new_top,
+                        bottom: new_bottom,
+                    },
                 }
-            },
-            _ => self.qubit
+            }
+            _ => self.qubit,
         }
     }
 }
 
 struct H {
-    row_1: [i32; 2],
-    row_2: [i32; 2],
+    row_1: [i8; 2],
+    row_2: [i8; 2],
 }
 
 impl H {
@@ -115,8 +127,20 @@ impl H {
         }
     }
 
-    fn apply(qubit: Qubit) -> SuperpositionedQubit {
-        SuperpositionedQubit
+    fn apply(&self, qubit: Qubit) -> Qubit {
+        match qubit.state {
+            Basis::Standard { top, bottom } => {
+                let new_top = *&self.row_1[0] * top + *&self.row_1[1] * bottom;
+                let new_bottom = *&self.row_2[0] * top + *&self.row_2[1] * bottom;
+                Qubit {
+                    state: Basis::Superposition {
+                        top: new_top,
+                        bottom: new_bottom,
+                    },
+                }
+            }
+            _ => qubit,
+        }
     }
 }
 
@@ -142,12 +166,14 @@ mod tests {
 
     #[test]
     fn h_gate_should_turn_qubit_state_to_superposition() {
-        assert!(H::apply(Qubit { state: ket1() }).is_in_superposition())
+        assert!(H::new()
+            .apply(Qubit { state: ket1() })
+            .is_in_superposition())
     }
 
     #[test]
     fn qubit_in_superposition_state_should_return_different_results() {
-        let mut q = SuperpositionedQubit;
+        let mut q = H::new().apply(Qubit { state: ket1() });
         let mut ground_state_detected: bool = false;
         let mut active_state_detected: bool = false;
         for i in 1..20 {
