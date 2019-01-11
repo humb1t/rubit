@@ -1,6 +1,10 @@
 extern crate rand;
+#[macro_use]
+extern crate approx;
+extern crate nalgebra as na;
 
 use rand::prelude::*;
+use na::{Vector2};
 
 fn main() {
     println!("Hello, quantum world!");
@@ -8,7 +12,7 @@ fn main() {
 
 #[derive(Copy, Clone)]
 enum Basis {
-    Standard { top: i8, bottom: i8 },
+    Standard {vector: Vector2<i8> },
     Superposition { top: i8, bottom: i8 },
     Circular {},
 }

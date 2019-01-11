@@ -5,3 +5,4 @@ authors = ["Nikita <Nikita_Puzankov@epam.com>"]
 
 [dependencies]
 rand = "0.6"
+nalgebra = "0.16"
