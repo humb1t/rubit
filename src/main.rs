@@ -3,8 +3,8 @@ extern crate rand;
 extern crate approx;
 extern crate nalgebra as na;
 
+use na::Vector2;
 use rand::prelude::*;
-use na::{Vector2};
 
 fn main() {
     println!("Hello, quantum world!");
@@ -12,17 +12,21 @@ fn main() {
 
 #[derive(Copy, Clone)]
 enum Basis {
-    Standard {vector: Vector2<i8> },
-    Superposition { top: i8, bottom: i8 },
+    Standard { vector: Vector2<i8> },
+    Superposition { vector: Vector2<i8> },
     Circular {},
 }
 
 fn ket0() -> Basis {
-    Basis::Standard { vector: Vector2::new(1,0) }
+    Basis::Standard {
+        vector: Vector2::new(1, 0),
+    }
 }
 
 fn ket1() -> Basis {
-    Basis::Standard { vector: Vector2::new(0,1) }
+    Basis::Standard {
+        vector: Vector2::new(0, 1),
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -40,7 +44,7 @@ impl Qubit {
                     false
                 }
             }
-            Basis::Superposition { top, bottom } => {
+            Basis::Superposition { vector } => {
                 let return_active: bool = random();
                 return_active
             }
@@ -50,7 +54,7 @@ impl Qubit {
 
     fn measure(&self) -> Basis {
         match &self.state {
-            Basis::Superposition { top, bottom } => {
+            Basis::Superposition { vector } => {
                 let return_active: bool = random();
                 if return_active {
                     ket1()
@@ -64,7 +68,7 @@ impl Qubit {
 
     fn is_in_superposition(&self) -> bool {
         match &self.state {
-            Basis::Superposition { top, bottom } => true,
+            Basis::Superposition { vector } => true,
             _ => false,
         }
     }
@@ -98,47 +102,28 @@ struct X {
 
 impl X {
     fn apply(&mut self) -> Qubit {
-        let a11 = 0 as i8;
-        let a12 = 1 as i8;
-        let a21 = 1 as i8;
-        let a22 = 0 as i8;
+        let matrix = na::Matrix2::new(0, 1, 1, 0);
         match self.qubit.state {
-            Basis::Standard { vector } => {
-                let new_top = a11 * vector[0] + a12 * vector[1];
-                let new_bottom = a21 * vector[0] + a22 * vector[1];
-                Qubit {
-                    state: Basis::Standard {
-                        vector: na::Vector2::new(new_top, new_bottom)
-                    },
-                }
-            }
+            Basis::Standard { vector } => Qubit {
+                state: Basis::Standard {
+                    vector: matrix * vector,
+                },
+            },
             _ => self.qubit,
         }
     }
 }
 
-struct H {
-    row_1: [i8; 2],
-    row_2: [i8; 2],
-}
+struct H {}
 
 impl H {
-    fn new() -> H {
-        H {
-            row_1: [1, 1],
-            row_2: [1, -1],
-        }
-    }
-
     fn apply(&self, qubit: Qubit) -> Qubit {
         match qubit.state {
             Basis::Standard { vector } => {
-                let new_top = *&self.row_1[0] * vector[0] + *&self.row_1[1] * vector[1];
-                let new_bottom = *&self.row_2[0] * vector[0] + *&self.row_2[1] * vector[1];
+                let matrix = na::Matrix2::new(1, 1, 1, -1);
                 Qubit {
                     state: Basis::Superposition {
-                        top: new_top,
-                        bottom: new_bottom
+                        vector: matrix * vector,
                     },
                 }
             }
@@ -169,14 +154,12 @@ mod tests {
 
     #[test]
     fn h_gate_should_turn_qubit_state_to_superposition() {
-        assert!(H::new()
-            .apply(Qubit { state: ket1() })
-            .is_in_superposition())
+        assert!(H {}.apply(Qubit { state: ket1() }).is_in_superposition())
     }
 
     #[test]
     fn qubit_in_superposition_state_should_return_different_results() {
-        let mut q = H::new().apply(Qubit { state: ket1() });
+        let mut q = H {}.apply(Qubit { state: ket1() });
         let mut ground_state_detected: bool = false;
         let mut active_state_detected: bool = false;
         for i in 1..20 {
