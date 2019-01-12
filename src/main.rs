@@ -18,11 +18,11 @@ enum Basis {
 }
 
 fn ket0() -> Basis {
-    Basis::Standard { top: 1, bottom: 0 }
+    Basis::Standard { vector: Vector2::new(1,0) }
 }
 
 fn ket1() -> Basis {
-    Basis::Standard { top: 0, bottom: 1 }
+    Basis::Standard { vector: Vector2::new(0,1) }
 }
 
 #[derive(Copy, Clone)]
@@ -33,8 +33,8 @@ struct Qubit {
 impl Qubit {
     fn is_active(&self) -> bool {
         match &self.state {
-            Basis::Standard { top, bottom } => {
-                if *top == 0 as i8 {
+            Basis::Standard { vector } => {
+                if vector[0] == 0 as i8 {
                     true
                 } else {
                     false
@@ -103,13 +103,12 @@ impl X {
         let a21 = 1 as i8;
         let a22 = 0 as i8;
         match self.qubit.state {
-            Basis::Standard { top, bottom } => {
-                let new_top = a11 * top + a12 * bottom;
-                let new_bottom = a21 * top + a22 * bottom;
+            Basis::Standard { vector } => {
+                let new_top = a11 * vector[0] + a12 * vector[1];
+                let new_bottom = a21 * vector[0] + a22 * vector[1];
                 Qubit {
                     state: Basis::Standard {
-                        top: new_top,
-                        bottom: new_bottom,
+                        vector: na::Vector2::new(new_top, new_bottom)
                     },
                 }
             }
@@ -133,13 +132,13 @@ impl H {
 
     fn apply(&self, qubit: Qubit) -> Qubit {
         match qubit.state {
-            Basis::Standard { top, bottom } => {
-                let new_top = *&self.row_1[0] * top + *&self.row_1[1] * bottom;
-                let new_bottom = *&self.row_2[0] * top + *&self.row_2[1] * bottom;
+            Basis::Standard { vector } => {
+                let new_top = *&self.row_1[0] * vector[0] + *&self.row_1[1] * vector[1];
+                let new_bottom = *&self.row_2[0] * vector[0] + *&self.row_2[1] * vector[1];
                 Qubit {
                     state: Basis::Superposition {
                         top: new_top,
-                        bottom: new_bottom,
+                        bottom: new_bottom
                     },
                 }
             }
@@ -182,9 +181,9 @@ mod tests {
         let mut active_state_detected: bool = false;
         for i in 1..20 {
             match q.measure() {
-                Basis::Standard { top, bottom } => {
-                    println!("Standard {},{}", top, bottom);
-                    if bottom == 1 {
+                Basis::Standard { vector } => {
+                    println!("Standard {},{}", vector[0], vector[1]);
+                    if vector[1] == 1 {
                         active_state_detected = true
                     } else {
                         ground_state_detected = true
