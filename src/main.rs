@@ -10,66 +10,44 @@ fn main() {
     println!("Hello, quantum world!");
 }
 
-#[derive(Copy, Clone)]
-enum Basis {
-    Standard { vector: Vector2<i8> },
-    Superposition { vector: Vector2<i8> },
-    Circular {},
+fn ket0() -> Vector2<i8> {
+    Vector2::new(1, 0)
 }
 
-fn ket0() -> Basis {
-    Basis::Standard {
-        vector: Vector2::new(1, 0),
-    }
-}
-
-fn ket1() -> Basis {
-    Basis::Standard {
-        vector: Vector2::new(0, 1),
-    }
+fn ket1() -> Vector2<i8> {
+    Vector2::new(0, 1)
 }
 
 #[derive(Copy, Clone)]
 struct Qubit {
-    state: Basis,
+    state: Vector2<i8>,
+    is_in_superposition: bool,
 }
 
 impl Qubit {
     fn is_active(&self) -> bool {
-        match &self.state {
-            Basis::Standard { vector } => {
-                if vector[0] == 0 as i8 {
-                    true
-                } else {
-                    false
-                }
+        if !self.is_in_superposition {
+            if self.state[0] == 0 as i8 {
+                true
+            } else {
+                false
             }
-            Basis::Superposition { vector } => {
-                let return_active: bool = random();
-                return_active
-            }
-            _ => false,
+        } else {
+            let return_active: bool = random();
+            return_active
         }
     }
 
-    fn measure(&self) -> Basis {
-        match &self.state {
-            Basis::Superposition { vector } => {
-                let return_active: bool = random();
-                if return_active {
-                    ket1()
-                } else {
-                    ket0()
-                }
+    fn measure(&self) -> Vector2<i8> {
+        if self.is_in_superposition {
+            let return_active: bool = random();
+            if return_active {
+                ket1()
+            } else {
+                ket0()
             }
-            _ => *&self.state,
-        }
-    }
-
-    fn is_in_superposition(&self) -> bool {
-        match &self.state {
-            Basis::Superposition { vector } => true,
-            _ => false,
+        } else {
+            *&self.state
         }
     }
 
@@ -103,13 +81,13 @@ struct X {
 impl X {
     fn apply(&mut self) -> Qubit {
         let matrix = na::Matrix2::new(0, 1, 1, 0);
-        match self.qubit.state {
-            Basis::Standard { vector } => Qubit {
-                state: Basis::Standard {
-                    vector: matrix * vector,
-                },
-            },
-            _ => self.qubit,
+        if !self.qubit.is_in_superposition {
+            Qubit {
+                state: matrix * self.qubit.state,
+                is_in_superposition: false,
+            }
+        } else {
+            self.qubit
         }
     }
 }
@@ -118,16 +96,14 @@ struct H {}
 
 impl H {
     fn apply(&self, qubit: Qubit) -> Qubit {
-        match qubit.state {
-            Basis::Standard { vector } => {
-                let matrix = na::Matrix2::new(1, 1, 1, -1);
-                Qubit {
-                    state: Basis::Superposition {
-                        vector: matrix * vector,
-                    },
-                }
+        if !qubit.is_in_superposition {
+            let matrix = na::Matrix2::new(1, 1, 1, -1);
+            Qubit {
+                state: matrix * qubit.state,
+                is_in_superposition: true,
             }
-            _ => qubit,
+        } else {
+            qubit
         }
     }
 }
@@ -139,7 +115,10 @@ mod tests {
     #[test]
     fn x_gate_should_activate_qubit_in_ground_state() {
         let mut x = X {
-            qubit: Qubit { state: ket0() },
+            qubit: Qubit {
+                state: ket0(),
+                is_in_superposition: false,
+            },
         };
         assert!(x.apply().is_active())
     }
@@ -147,32 +126,39 @@ mod tests {
     #[test]
     fn x_gate_should_deactivate_qubit_in_exited_state() {
         let mut x = X {
-            qubit: Qubit { state: ket1() },
+            qubit: Qubit {
+                state: ket1(),
+                is_in_superposition: false,
+            },
         };
         assert!(!x.apply().is_active())
     }
 
     #[test]
     fn h_gate_should_turn_qubit_state_to_superposition() {
-        assert!(H {}.apply(Qubit { state: ket1() }).is_in_superposition())
+        assert!(
+            H {}.apply(Qubit {
+                state: ket1(),
+                is_in_superposition: false,
+            }).is_in_superposition
+        )
     }
 
     #[test]
     fn qubit_in_superposition_state_should_return_different_results() {
-        let mut q = H {}.apply(Qubit { state: ket1() });
+        let mut q = H {}.apply(Qubit {
+            state: ket1(),
+            is_in_superposition: false,
+        });
         let mut ground_state_detected: bool = false;
         let mut active_state_detected: bool = false;
         for i in 1..20 {
-            match q.measure() {
-                Basis::Standard { vector } => {
-                    println!("Standard {},{}", vector[0], vector[1]);
-                    if vector[1] == 1 {
-                        active_state_detected = true
-                    } else {
-                        ground_state_detected = true
-                    }
-                }
-                _ => (),
+            let vector = q.measure();
+            println!("Standard {},{}", vector[0], vector[1]);
+            if vector[1] == 1 {
+                active_state_detected = true
+            } else {
+                ground_state_detected = true
             }
         }
         assert!(ground_state_detected);
