@@ -25,18 +25,6 @@ struct Qubit {
 }
 
 impl Qubit {
-    fn is_active(&self) -> bool {
-        if !self.is_in_superposition {
-            if self.state[0] == 0 as i8 {
-                true
-            } else {
-                false
-            }
-        } else {
-            let return_active: bool = random();
-            return_active
-        }
-    }
 
     fn measure(&self) -> Vector2<i8> {
         if self.is_in_superposition {
@@ -67,7 +55,7 @@ struct CNOT {
 
 impl CNOT {
     fn apply(&mut self) -> Qubit {
-        if self.control.is_active() {
+        if self.control.state==ket1() {
             self.target.activate()
         }
         self.target
@@ -120,7 +108,7 @@ mod tests {
                 is_in_superposition: false,
             },
         };
-        assert!(x.apply().is_active())
+        assert!(x.apply().state==ket1())
     }
 
     #[test]
@@ -131,7 +119,7 @@ mod tests {
                 is_in_superposition: false,
             },
         };
-        assert!(!x.apply().is_active())
+        assert!(x.apply().state==ket0())
     }
 
     #[test]
