@@ -25,7 +25,6 @@ struct Qubit {
 }
 
 impl Qubit {
-
     fn measure(&self) -> Vector2<i8> {
         if self.is_in_superposition {
             let return_active: bool = random();
@@ -55,27 +54,25 @@ struct CNOT {
 
 impl CNOT {
     fn apply(&mut self) -> Qubit {
-        if self.control.state==ket1() {
+        if self.control.state == ket1() {
             self.target.activate()
         }
         self.target
     }
 }
 
-struct X {
-    qubit: Qubit,
-}
+struct X {}
 
 impl X {
-    fn apply(&mut self) -> Qubit {
+    fn apply(&self, qubit: Qubit) -> Qubit {
         let matrix = na::Matrix2::new(0, 1, 1, 0);
-        if !self.qubit.is_in_superposition {
+        if !qubit.is_in_superposition {
             Qubit {
-                state: matrix * self.qubit.state,
+                state: matrix * qubit.state,
                 is_in_superposition: false,
             }
         } else {
-            self.qubit
+            qubit
         }
     }
 }
@@ -102,24 +99,26 @@ mod tests {
 
     #[test]
     fn x_gate_should_activate_qubit_in_ground_state() {
-        let mut x = X {
-            qubit: Qubit {
+        assert!(
+            X {}.apply(Qubit {
                 state: ket0(),
                 is_in_superposition: false,
-            },
-        };
-        assert!(x.apply().state==ket1())
+            })
+            .state
+                == ket1()
+        )
     }
 
     #[test]
     fn x_gate_should_deactivate_qubit_in_exited_state() {
-        let mut x = X {
-            qubit: Qubit {
+        assert!(
+            X {}.apply(Qubit {
                 state: ket1(),
                 is_in_superposition: false,
-            },
-        };
-        assert!(x.apply().state==ket0())
+            })
+            .state
+                == ket0()
+        )
     }
 
     #[test]
@@ -128,7 +127,8 @@ mod tests {
             H {}.apply(Qubit {
                 state: ket1(),
                 is_in_superposition: false,
-            }).is_in_superposition
+            })
+            .is_in_superposition
         )
     }
 
