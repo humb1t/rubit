@@ -18,6 +18,14 @@ fn ket1() -> Vector2<i8> {
     Vector2::new(0, 1)
 }
 
+fn ket_plus() -> Vector2<i8> { 
+    Vector2::new(1, 1)
+}
+
+fn ket_minus() -> Vector2<i8> { 
+    Vector2::new(1, -1)
+}
+
 #[derive(Copy, Clone)]
 struct Qubit {
     state: Vector2<i8>,
@@ -151,5 +159,25 @@ mod tests {
         }
         assert!(ground_state_detected);
         assert!(active_state_detected);
+    }
+
+    #[test]
+    fn h_gate_should_turn_ket0_to_ket_plus() {
+        assert!(H{}.apply(
+                Qubit {
+                    state: ket0(),
+                    is_in_superposition: false,
+                }
+            ).state == ket_plus())
+    }
+
+    #[test]
+    fn h_gate_should_turn_ket1_to_ket_minus() {
+        assert!(H{}.apply(
+                Qubit {
+                    state: ket1(),
+                    is_in_superposition: false,
+                }
+            ).state == ket_minus())
     }
 }
