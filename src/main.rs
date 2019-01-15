@@ -3,8 +3,9 @@ extern crate rand;
 extern crate approx;
 extern crate nalgebra as na;
 
-use na::Vector2;
+use na::{Vector1,Vector2};
 use rand::prelude::*;
+use std::f64;
 
 fn main() {
     println!("Hello, quantum world!");
@@ -24,6 +25,10 @@ fn ket_plus() -> Vector2<i8> {
 
 fn ket_minus() -> Vector2<i8> { 
     Vector2::new(1, -1)
+}
+
+fn pi() -> Vector1<f64>{
+    Vector1::new(f64::consts::PI)
 }
 
 #[derive(Copy, Clone)]
