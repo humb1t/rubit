@@ -7,3 +7,4 @@ authors = ["Nikita <Nikita_Puzankov@epam.com>"]
 rand = "0.6"
 nalgebra = "0.16"
 approx = "*"
+num-complex = "0.2"
