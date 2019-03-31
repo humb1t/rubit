@@ -11,34 +11,34 @@ fn main() {
     println!("Hello, quantum world!");
 }
 
-fn ket0() -> Vector2<i8> {
-    Vector2::new(1, 0)
+fn ket0() -> Vector2<f64> {
+    Vector2::new(1.0, 0.0)
 }
 
-fn ket1() -> Vector2<i8> {
-    Vector2::new(0, 1)
+fn ket1() -> Vector2<f64> {
+    Vector2::new(0.0, 1.0)
 }
 
-fn ket_plus() -> Vector2<i8> { 
-    Vector2::new(1, 1)
+fn ket_plus() -> Vector2<f64> { 
+    Vector2::new(1.0, 1.0)
 }
 
-fn ket_minus() -> Vector2<i8> { 
-    Vector2::new(1, -1)
+fn ket_minus() -> Vector2<f64> { 
+    Vector2::new(1.0, -1.0)
 }
 
-fn pi() -> Vector1<f64>{
-    Vector1::new(f64::consts::PI)
+fn pi() -> f64{
+    f64::consts::PI
 }
 
 #[derive(Copy, Clone)]
 struct Qubit {
-    state: Vector2<i8>,
+    state: Vector2<f64>,
     is_in_superposition: bool,
 }
 
 impl Qubit {
-    fn measure(&self) -> Vector2<i8> {
+    fn measure(&self) -> Vector2<f64> {
         if self.is_in_superposition {
             let return_active: bool = random();
             if return_active {
@@ -78,7 +78,7 @@ struct X {}
 
 impl X {
     fn apply(&self, qubit: Qubit) -> Qubit {
-        let matrix = na::Matrix2::new(0, 1, 1, 0);
+        let matrix: na::Matrix2<f64> = na::Matrix2::new(0.0, 1.0, 1.0, 0.0);
         if !qubit.is_in_superposition {
             Qubit {
                 state: matrix * qubit.state,
@@ -95,7 +95,7 @@ struct H {}
 impl H {
     fn apply(&self, qubit: Qubit) -> Qubit {
         if !qubit.is_in_superposition {
-            let matrix = na::Matrix2::new(1, 1, 1, -1);
+            let matrix: na::Matrix2<f64> = na::Matrix2::new(1.0, 1.0, 1.0, -1.0);
             Qubit {
                 state: matrix * qubit.state,
                 is_in_superposition: true,
@@ -103,6 +103,15 @@ impl H {
         } else {
             qubit
         }
+    }
+}
+
+struct T{}
+
+impl T {
+    fn apply(&self, qubit: Qubit) -> Qubit {
+        let matrix: na::Matrix2<f64> = na::Matrix2::new(1.0,0.0,0.0,pi()/4.0_f64);
+        qubit
     }
 }
 
@@ -156,7 +165,7 @@ mod tests {
         for i in 1..20 {
             let vector = q.measure();
             println!("Standard {},{}", vector[0], vector[1]);
-            if vector[1] == 1 {
+            if vector[1] == 1.0 {
                 active_state_detected = true
             } else {
                 ground_state_detected = true
